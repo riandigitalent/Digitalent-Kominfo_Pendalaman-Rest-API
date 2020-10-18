@@ -9,16 +9,23 @@ type Auth struct {
 	ID int `gorm:"primary_key" json:"-"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
-	Token string `json:"token,omitempty"`
+	Role int `json:"role,omitempty"`
+}
+
+type TokenDetails struct {
+	AccessToken string
+	RefreshToken string
+	AtExpires int64
+	RtExpires int64
 }
 
 func Validate (token string, db *gorm.DB) (*Auth,error){
 	var auth Auth
-	if err := db.Where(&Auth{Token: token}).First(&auth).Error;err != nil{
-		if err == gorm.ErrRecordNotFound{
-			return nil,errors.Errorf("invalid token")
-		}
-	}
+	//if err := db.Where(&Auth{Token: token}).First(&auth).Error;err != nil{
+	//	if err == gorm.ErrRecordNotFound{
+	//		return nil,errors.Errorf("invalid token")
+	//	}
+	//}
 
 	return &auth,nil
 }

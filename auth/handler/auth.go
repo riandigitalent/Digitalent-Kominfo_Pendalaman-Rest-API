@@ -3,9 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/auth/database"
+	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/auth/helper"
 	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/utils"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -19,16 +21,21 @@ func (db *Auth) ValidateAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authToken := r.Header.Get("Authorization")
-
-	res, err := database.Validate(authToken,db.Db); if err != nil{
-		utils.WrapAPIError(w, r, err.Error(), http.StatusForbidden)
+	idUser,role,err := helper.TokenValid(r); if err != nil {
+		utils.WrapAPIError(w, r, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	log.Println(idUser)
+
+	//res, err := database.Validate(authToken,db.Db); if err != nil{
+	//	utils.WrapAPIError(w, r, err.Error(), http.StatusForbidden)
+	//	return
+	//}
+
 	utils.WrapAPIData(w,r,database.Auth{
-		Username: res.Username,
-		Token:    res.Token,
+		Username: idUser,
+		Role: role,
 	},http.StatusOK,"success")
 	return
 }
@@ -53,7 +60,6 @@ func (db *Auth) SignUp (w http.ResponseWriter, r *http.Request){
 		utils.WrapAPIError(w, r, "error unmarshal : "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	signup.Token = utils.IdGenerator()
 
 	err = signup.SignUp(db.Db); if err != nil{
 		utils.WrapAPIError(w,r,err.Error(),http.StatusBadRequest)
@@ -79,8 +85,6 @@ func (db *Auth) Login (w http.ResponseWriter, r *http.Request){
 
 	var login database.Auth
 
-
-
 	err = json.Unmarshal(body, &login)
 	if err != nil {
 		utils.WrapAPIError(w, r, "error unmarshal : "+err.Error(), http.StatusInternalServerError)
@@ -92,9 +96,8 @@ func (db *Auth) Login (w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	utils.WrapAPIData(w,r,database.Auth{
-		Username: res.Username,
-		Token:    res.Token,
-	},http.StatusOK,"success")
+	err, token := helper.CreateToken(res.Role,res.Username)
+
+	utils.WrapAPIData(w,r,token,http.StatusOK,"success")
 	return
 }
