@@ -35,7 +35,7 @@ func (db *Auth) ValidateAuth(w http.ResponseWriter, r *http.Request) {
 
 	utils.WrapAPIData(w,r,database.Auth{
 		Username: idUser,
-		Role: role,
+		Role: &role,
 	},http.StatusOK,"success")
 	return
 }
@@ -96,7 +96,7 @@ func (db *Auth) Login (w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	err, token := helper.CreateToken(res.Role,res.Username)
+	err, token := helper.CreateToken(*res.Role,res.Username)
 
 	utils.WrapAPIData(w,r,token,http.StatusOK,"success")
 	return

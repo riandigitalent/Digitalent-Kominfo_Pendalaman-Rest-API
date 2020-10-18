@@ -105,6 +105,7 @@ func TokenValid(r *http.Request) (string,int,error) {
 		if !ok {
 			return "",0, err
 		}
+		log.Println("ROLER : ",role)
 		return idUser,int(role.(float64)),nil
 	}
 

@@ -9,7 +9,7 @@ type Auth struct {
 	ID int `gorm:"primary_key" json:"-"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
-	Role int `json:"role,omitempty"`
+	Role *int `json:"role,omitempty"`
 }
 
 type TokenDetails struct {
