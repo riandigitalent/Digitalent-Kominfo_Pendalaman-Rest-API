@@ -24,6 +24,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.Handle("/auth/validate",http.HandlerFunc(authHandler.ValidateAuth))
+	router.Handle("/auth/refresh",http.HandlerFunc(handler.RefreshToken))
 	router.Handle("/auth/signup", http.HandlerFunc(authHandler.SignUp))
 	router.Handle("/auth/login", http.HandlerFunc(authHandler.Login))
 

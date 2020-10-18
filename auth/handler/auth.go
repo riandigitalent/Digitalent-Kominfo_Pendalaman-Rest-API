@@ -2,9 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/auth/constant"
 	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/auth/database"
 	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/auth/helper"
 	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/utils"
+	"github.com/dgrijalva/jwt-go"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"log"
@@ -38,6 +41,77 @@ func (db *Auth) ValidateAuth(w http.ResponseWriter, r *http.Request) {
 		Role: &role,
 	},http.StatusOK,"success")
 	return
+}
+
+func RefreshToken (w http.ResponseWriter, r *http.Request){
+	if r.Method != "POST" {
+		utils.WrapAPIError(w, r, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+	type refreshtoken struct {
+		Role *int `json:"role" validate:"required"`
+		RefreshToken string `json:"refresh_token" validate:"required"`
+	}
+
+	var rt refreshtoken
+
+	var roleStr string
+
+
+	if err := json.NewDecoder(r.Body).Decode(&rt); err != nil {
+		log.Println(err)
+		utils.WrapAPIError(w, r, "error marshalling body", http.StatusInternalServerError)
+		return
+	}
+
+	if *rt.Role == constant.ADMIN {
+		roleStr="admin"
+	}else if *rt.Role == constant.CONSUMER {
+		roleStr="consumer"
+	}
+
+	token, err := jwt.Parse(rt.RefreshToken, func(token *jwt.Token) (interface{}, error) {
+		//Make sure that the token method conform to "SigningMethodHMAC"
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(fmt.Sprintf("refresh_secret_%s_digitalent",roleStr)), nil
+	})
+	//TODO SET ENV
+	if err != nil {
+		utils.WrapAPIError(w, r, "Refresh token expired", http.StatusUnauthorized)
+		return
+	}
+	//is token valid?
+	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
+		utils.WrapAPIError(w, r, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims) //the token claims should conform to MapClaims
+	if ok && token.Valid {
+
+		idUser, ok := claims["id_user"].(string)
+		if !ok {
+			utils.WrapAPIError(w, r, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
+			return
+		}
+
+		err, ts := helper.CreateToken(*rt.Role,idUser)
+		if err != nil {
+			utils.WrapAPIError(w, r, err.Error(), http.StatusUnprocessableEntity)
+			return
+		}
+
+		tokens := map[string]string{
+			"access_token":  ts.AccessToken,
+			"refresh_token": ts.RefreshToken,
+		}
+
+		utils.WrapAPIData(w, r, tokens, http.StatusOK, "success")
+		return
+	}
 }
 
 func (db *Auth) SignUp (w http.ResponseWriter, r *http.Request){
