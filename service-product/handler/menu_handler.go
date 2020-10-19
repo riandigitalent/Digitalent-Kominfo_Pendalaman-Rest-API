@@ -3,12 +3,13 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/service-product/database"
-	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/utils"
-	"github.com/gorilla/context"
-	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/gorilla/context"
+	"github.com/riandigitalent/Digitalent-Kominfo_Pendalaman-Rest-API/service-product/database"
+	"github.com/riandigitalent/Digitalent-Kominfo_Pendalaman-Rest-API/utils"
+	"gorm.io/gorm"
 )
 
 type Menu struct {
@@ -35,7 +36,7 @@ func (menu *Menu) AddMenu(w http.ResponseWriter, r *http.Request) {
 		utils.WrapAPIError(w, r, "error unmarshal : "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	dataMenu.Username = fmt.Sprintf("%v",context.Get(r,"user"))
+	dataMenu.Username = fmt.Sprintf("%v", context.Get(r, "user"))
 	err = dataMenu.Insert(menu.Db)
 	if err != nil {
 		utils.WrapAPIError(w, r, "insert menu error : "+err.Error(), http.StatusInternalServerError)

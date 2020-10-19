@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/auth/config"
-	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/auth/database"
-	"github.com/FadhlanHawali/Digitalent-Kominfo_Pendalaman-Rest-API/auth/handler"
+	"log"
+	"net/http"
+
 	"github.com/gorilla/mux"
+	"github.com/riandigitalent/Digitalent-Kominfo_Pendalaman-Rest-API/auth/config"
+	"github.com/riandigitalent/Digitalent-Kominfo_Pendalaman-Rest-API/auth/database"
+	"github.com/riandigitalent/Digitalent-Kominfo_Pendalaman-Rest-API/auth/handler"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
-	"net/http"
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 	authHandler := handler.Auth{Db: db}
 	router := mux.NewRouter()
 
-	router.Handle("/auth/validate",http.HandlerFunc(authHandler.ValidateAuth))
+	router.Handle("/auth/validate", http.HandlerFunc(authHandler.ValidateAuth))
 	router.Handle("/auth/signup", http.HandlerFunc(authHandler.SignUp))
 	router.Handle("/auth/login", http.HandlerFunc(authHandler.Login))
 
